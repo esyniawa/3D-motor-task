@@ -84,4 +84,4 @@ def forward_kinematics(wtheta,
 if __name__ == '__main__':
     print(forward_kinematics(wtheta = [0,0,0], atheta = np.radians([5, 120, 90, 90, 20])))
 
-    print(theta_limits(wtheta=[0, 0, 0], atheta=np.radians([5, 120, 90, 90, 20])))
+    print(check_theta_limits(wtheta=[0, 0, 0], atheta=np.radians([5, 120, 90, 90, 20])))
