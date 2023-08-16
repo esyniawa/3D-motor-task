@@ -1,5 +1,6 @@
 import numpy as np
 
+
 # Calculate the Transformation Matrix A according to the DH convention
 def DH_matrix(a, d, alpha, theta, rad=True):
 
@@ -51,7 +52,7 @@ def forward_kinematics(wtheta,
     # ---------------------- ARM ----------------------------
     # atheta = [shoulder_pitch, shoulder_roll, shoulder_yaw, elbow, forearm]
     # shoulder
-    A_3 = DH_matrix(a=0, d=const * 107.74 , alpha=const * -np.pi/2, theta=atheta[0] + const * np.pi/2)
+    A_3 = DH_matrix(a=0, d=const * 107.74, alpha=const * -np.pi/2, theta=atheta[0] + const * np.pi/2)
     A_4 = DH_matrix(a=0, d=0, alpha=np.pi/2, theta=atheta[1] - np.pi/2)
     A_5 = DH_matrix(a=0, d=const*152.28, alpha=-np.pi/2, theta=atheta[2] - 15*np.pi/180 + const*np.pi/2)
     # elbow
@@ -70,7 +71,5 @@ def forward_kinematics(wtheta,
     else:
         return A_67[:3, 3]
 
-
 if __name__ == '__main__':
-    res = forward_kinematics(wtheta=(10,10,10), atheta=(0,0,0,0,0))
-    print(res)
+    print(forward_kinematics(wtheta = [0,0,0], atheta = np.radians([5, 120, 90, 90, 20])))
