@@ -40,7 +40,9 @@ def forward_kinematics(wtheta,
         wtheta = np.radians(wtheta)
         atheta = np.radians(atheta)
 
-    if check_theta_limits(wtheta, atheta):
+    if not check_theta_limits(wtheta, atheta):
+        raise ValueError('Check joint contraints')
+    else:
         if arm == 'right':
             const = -1
         elif arm == 'left':
@@ -75,13 +77,32 @@ def forward_kinematics(wtheta,
         A_67 = A_56 @ A_7
 
         if return_joint_coordinates:
-            return A_12[:3, 3], A_23[:3, 3], A_56[:3, 3], A_67[:3, 3]
+            return np.column_stack((A_0[:3, 3], A_12[:3, 3], A_23[:3, 3], A_56[:3, 3], A_67[:3, 3]))
         else:
             return A_67[:3, 3]
-    else:
-        return None
+
+
+def plot_arms(wtheta, atheta_left, atheta_right, rad=True):
+    if not rad:
+        wtheta = np.radians(wtheta)
+        atheta_left = np.radians(atheta_left)
+        atheta_right = np.radians(atheta_right)
+
+
+    pos_left_arm = forward_kinematics(wtheta, atheta_left, arm='left', return_joint_coordinates=True)
+    pos_right_arm = forward_kinematics(wtheta, atheta_right, arm='right', return_joint_coordinates=True)
+
+    # 3D plot
+    import matplotlib.pyplot as plt
+
+    ax = plt.figure().add_subplot(projection='3d')
+    ax.plot(pos_left_arm[0,:],pos_left_arm[1,:], pos_left_arm[2,:])
+    ax.plot(pos_right_arm[0,:],pos_right_arm[1,:], pos_right_arm[2,:])
+
+    plt.show()
+
 
 if __name__ == '__main__':
-    print(forward_kinematics(wtheta = [0,0,0], atheta = np.radians([5, 120, 90, 90, 20])))
+    plot_arms(wtheta=[0, 0, 0], atheta_left=np.radians([5, 120, 90, 90, 20]), atheta_right=np.radians([5, 120, 90, 90, 20]))
 
-    print(check_theta_limits(wtheta=[0, 0, 0], atheta=np.radians([5, 120, 90, 90, 20])))
+
