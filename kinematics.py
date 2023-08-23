@@ -53,7 +53,7 @@ def forward_kinematics(wtheta,
         # ---------------------- WAIST ----------------------------
         # wtheta = [torso_pitch, torso_roll, torso_yaw]
         A_0 = DH_matrix(a=32, d=0, alpha=np.pi/2, theta=wtheta[0])
-        A_1 = DH_matrix(a=0, d=-5.5, alpha=-np.pi/2, theta=wtheta[1] - np.pi/2)
+        A_1 = DH_matrix(a=0, d=-5.5, alpha=np.pi/2, theta=wtheta[1] - np.pi/2)
         A_2 = DH_matrix(a=const * 23.3647, d=-143.3, alpha=const * -np.pi/2, theta=wtheta[2] + const * 105 * np.pi/180)
 
         A_01 = A_0 @ A_1
@@ -63,12 +63,12 @@ def forward_kinematics(wtheta,
         # atheta = [shoulder_pitch, shoulder_roll, shoulder_yaw, elbow, forearm]
         # shoulder
         A_3 = DH_matrix(a=0, d=const * 107.74, alpha=const * -np.pi/2, theta=atheta[0] + const * np.pi/2)
-        A_4 = DH_matrix(a=0, d=0, alpha=np.pi/2, theta=atheta[1] - np.pi/2)
-        A_5 = DH_matrix(a=0, d=const*152.28, alpha=-np.pi/2, theta=atheta[2] - 15*np.pi/180 + const*np.pi/2)
+        A_4 = DH_matrix(a=0, d=0, alpha=const * np.pi/2, theta=atheta[1] - np.pi/2)
+        A_5 = DH_matrix(a=const * 15, d=const * 152.28, alpha=-np.pi/2, theta=atheta[2] - 15*np.pi/180 + const*np.pi/2)
         # elbow
-        A_6 = DH_matrix(a=-15, d=0, alpha=np.pi/2, theta=atheta[3])
+        A_6 = DH_matrix(a=const * -15, d=0, alpha=np.pi/2, theta=atheta[3])
         #forearm
-        A_7 = DH_matrix(a=0, d=137.3, alpha=np.pi/2, theta=atheta[4] - np.pi/2)
+        A_7 = DH_matrix(a=0, d=const * 137.3, alpha=np.pi/2, theta=atheta[4] - np.pi/2)
 
         A_23 = A_12 @ A_3
         A_34 = A_23 @ A_4
