@@ -4,7 +4,7 @@ import sys, os
 from pybads.bads import BADS
 from contextlib import contextmanager
 
-from kinematics import forward_kinematics
+from forward_kinematics import forward_kinematics_arm
 from parameters import params
 
 # supress standard output
@@ -23,7 +23,7 @@ def error_function_kinematic(atheta,
                              wtheta = params['waist_position'],
                              arm='right'):
 
-    error = end_point - forward_kinematics(wtheta, atheta, arm)
+    error = end_point - forward_kinematics_arm(wtheta, atheta, arm)
     return np.linalg.norm(error)
 
 
@@ -33,6 +33,7 @@ def bads_inverse_kinematic(starting_angles, rad = True):
 
     target = error_function_kinematic
 
+    print(starting_angles)
     bads = BADS(target, starting_angles,
                 plausible_lower_bounds=params['lower_arm_joint_limits'],
                 plausible_upper_bounds=params['upper_arm_joint_limits'])
@@ -42,9 +43,9 @@ def bads_inverse_kinematic(starting_angles, rad = True):
 
     return joint_angles
 
+
 if __name__ == '__main__':
 
-    with suppress_stdout():
-        res = bads_inverse_kinematic(params['starting_angles'])
+    res = bads_inverse_kinematic(np.radians([-25, 20, 30, 12, 30]))
 
-    print(forward_kinematics(wtheta=params['waist_position'], atheta=res))
+    print(res)
