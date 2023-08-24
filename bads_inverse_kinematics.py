@@ -49,3 +49,4 @@ if __name__ == '__main__':
         res = bads_inverse_kinematic(starting_angles=params['starting_angles'])
 
     print(np.degrees(res))
+    print(forward_kinematics_arm(params['waist_position'], res))
