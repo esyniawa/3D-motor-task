@@ -13,6 +13,6 @@ params = {
     'waist_position': np.radians([0, 0, 0]),
     # all points are depending on the waist position
     'starting_angles': np.radians([5, 20, 0, 90, 20]),
-    'end_point': np.array([-61, 171, -162])
+    'end_point': np.array([-61.0, 171.0, -162.0])
 }
 

@@ -56,46 +56,44 @@ def forward_kinematics_arm(wtheta,
         wtheta = np.radians(wtheta)
         atheta = np.radians(atheta)
 
-    if not check_theta_limits_arm(wtheta, atheta):
-        pass
+
+    if arm == 'right':
+        const = -1
+    elif arm == 'left':
+        const = 1
     else:
-        if arm == 'right':
-            const = -1
-        elif arm == 'left':
-            const = 1
-        else:
-            raise ValueError('Arm should be either the right or the left arm')
+        raise ValueError('Arm should be either the right or the left arm')
 
-        # ---------------------- WAIST ----------------------------
-        # wtheta = [torso_pitch, torso_roll, torso_yaw]
-        A_0 = DH_matrix(a=32, d=0, alpha=np.pi/2, theta=wtheta[0])
-        A_1 = DH_matrix(a=0, d=-5.5, alpha=np.pi/2, theta=wtheta[1] - np.pi/2)
-        A_2 = DH_matrix(a=const * 23.3647, d=-143.3, alpha=const * -np.pi/2, theta=wtheta[2] + const * 105 * np.pi/180)
+    # ---------------------- WAIST ----------------------------
+    # wtheta = [torso_pitch, torso_roll, torso_yaw]
+    A_0 = DH_matrix(a=32, d=0, alpha=np.pi/2, theta=wtheta[0])
+    A_1 = DH_matrix(a=0, d=-5.5, alpha=np.pi/2, theta=wtheta[1] - np.pi/2)
+    A_2 = DH_matrix(a=const * 23.3647, d=-143.3, alpha=const * -np.pi/2, theta=wtheta[2] + const * 105 * np.pi/180)
 
-        A_01 = A_0 @ A_1
-        A_12 = A_01 @ A_2
+    A_01 = A_0 @ A_1
+    A_12 = A_01 @ A_2
 
-        # ---------------------- ARM ----------------------------
-        # atheta = [shoulder_pitch, shoulder_roll, shoulder_yaw, elbow, forearm]
-        # shoulder
-        A_3 = DH_matrix(a=0, d=const * 107.74, alpha=const * -np.pi/2, theta=atheta[0] + const * np.pi/2)
-        A_4 = DH_matrix(a=0, d=0, alpha=const * np.pi/2, theta=atheta[1] - np.pi/2)
-        A_5 = DH_matrix(a=const * 15, d=const * 152.28, alpha=-np.pi/2, theta=atheta[2] - 15*np.pi/180 + const*np.pi/2)
-        # elbow
-        A_6 = DH_matrix(a=const * -15, d=0, alpha=np.pi/2, theta=atheta[3])
-        #forearm
-        A_7 = DH_matrix(a=0, d=const * 137.3, alpha=np.pi/2, theta=atheta[4] - np.pi/2)
+    # ---------------------- ARM ----------------------------
+    # atheta = [shoulder_pitch, shoulder_roll, shoulder_yaw, elbow, forearm]
+    # shoulder
+    A_3 = DH_matrix(a=0, d=const * 107.74, alpha=const * -np.pi/2, theta=atheta[0] + const * np.pi/2)
+    A_4 = DH_matrix(a=0, d=0, alpha=const * np.pi/2, theta=atheta[1] - np.pi/2)
+    A_5 = DH_matrix(a=const * 15, d=const * 152.28, alpha=-np.pi/2, theta=atheta[2] - 15*np.pi/180 + const*np.pi/2)
+    # elbow
+    A_6 = DH_matrix(a=const * -15, d=0, alpha=np.pi/2, theta=atheta[3])
+    #forearm
+    A_7 = DH_matrix(a=0, d=const * 137.3, alpha=np.pi/2, theta=atheta[4] - np.pi/2)
 
-        A_23 = A_12 @ A_3
-        A_34 = A_23 @ A_4
-        A_45 = A_34 @ A_5
-        A_56 = A_45 @ A_6
-        A_67 = A_56 @ A_7
+    A_23 = A_12 @ A_3
+    A_34 = A_23 @ A_4
+    A_45 = A_34 @ A_5
+    A_56 = A_45 @ A_6
+    A_67 = A_56 @ A_7
 
-        if return_joint_coordinates:
-            return np.column_stack((A_0[:3, 3], A_12[:3, 3], A_23[:3, 3], A_56[:3, 3], A_67[:3, 3]))
-        else:
-            return A_67[:3, 3]
+    if return_joint_coordinates:
+        return np.column_stack((A_0[:3, 3], A_12[:3, 3], A_23[:3, 3], A_56[:3, 3], A_67[:3, 3]))
+    else:
+        return A_67[:3, 3]
 
 
 def forward_kinematics_head(wtheta,
@@ -106,43 +104,40 @@ def forward_kinematics_head(wtheta,
         wtheta = np.radians(wtheta)
         htheta = np.radians(htheta)
 
-    if not check_theta_limits_head(wtheta, htheta):
-        raise ValueError('Check joint constraints')
 
-    else:
-        # ---------------------- WAIST ----------------------------
-        # wtheta = [torso_pitch, torso_roll, torso_yaw]
-        A_0 = DH_matrix(a=32, d=0, alpha=np.pi/2, theta=wtheta[0])
-        A_1 = DH_matrix(a=0, d=-5.5, alpha=np.pi/2, theta=wtheta[1] - np.pi/2)
-        A_2 = DH_matrix(a=2.31, d=-193.3, alpha=-np.pi/2, theta=wtheta[2] - np.pi/2)
+    # ---------------------- WAIST ----------------------------
+    # wtheta = [torso_pitch, torso_roll, torso_yaw]
+    A_0 = DH_matrix(a=32, d=0, alpha=np.pi/2, theta=wtheta[0])
+    A_1 = DH_matrix(a=0, d=-5.5, alpha=np.pi/2, theta=wtheta[1] - np.pi/2)
+    A_2 = DH_matrix(a=2.31, d=-193.3, alpha=-np.pi/2, theta=wtheta[2] - np.pi/2)
 
-        A_01 = A_0 @ A_1
-        A_12 = A_01 @ A_2
-        # ---------------------- HEAD ----------------------------
-        # neck + head
-        A_3 = DH_matrix(a=33, d=0, alpha=np.pi/2, theta=htheta[0] + np.pi/2)
-        A_4 = DH_matrix(a=0, d=1, alpha=-np.pi/2, theta=htheta[1] - np.pi/2)
-        A_5 = DH_matrix(a=-54, d=82.5, alpha=-np.pi/2, theta=htheta[2] + np.pi/2)
+    A_01 = A_0 @ A_1
+    A_12 = A_01 @ A_2
+    # ---------------------- HEAD ----------------------------
+    # neck + head
+    A_3 = DH_matrix(a=33, d=0, alpha=np.pi/2, theta=htheta[0] + np.pi/2)
+    A_4 = DH_matrix(a=0, d=1, alpha=-np.pi/2, theta=htheta[1] - np.pi/2)
+    A_5 = DH_matrix(a=-54, d=82.5, alpha=-np.pi/2, theta=htheta[2] + np.pi/2)
 
-        A_23 = A_12 @ A_3
-        A_34 = A_23 @ A_4
-        A_45 = A_34 @ A_5
+    A_23 = A_12 @ A_3
+    A_34 = A_23 @ A_4
+    A_45 = A_34 @ A_5
 
-        # eyes
-        A_6_left = DH_matrix(a=0, d=34, alpha=-np.pi/2, theta=htheta[3])
-        A_7_left = DH_matrix(a=0, d=0, alpha=np.pi/2, theta=htheta[4] - np.pi/2)
+    # eyes
+    A_6_left = DH_matrix(a=0, d=34, alpha=-np.pi/2, theta=htheta[3])
+    A_7_left = DH_matrix(a=0, d=0, alpha=np.pi/2, theta=htheta[4] - np.pi/2)
 
-        A_6_right = DH_matrix(a=0, d=-34, alpha=-np.pi/2, theta=htheta[3])
-        A_7_right = DH_matrix(a=0, d=0, alpha=np.pi/2, theta=htheta[4] - np.pi/2)
+    A_6_right = DH_matrix(a=0, d=-34, alpha=-np.pi/2, theta=htheta[3])
+    A_7_right = DH_matrix(a=0, d=0, alpha=np.pi/2, theta=htheta[4] - np.pi/2)
 
-        # left eye
-        A_56_left = A_45 @ A_6_left
-        A_67_left = A_56_left @ A_7_left
-        # right eye
-        A_56_right = A_45 @ A_6_right
-        A_67_right = A_56_right @ A_7_right
+    # left eye
+    A_56_left = A_45 @ A_6_left
+    A_67_left = A_56_left @ A_7_left
+    # right eye
+    A_56_right = A_45 @ A_6_right
+    A_67_right = A_56_right @ A_7_right
 
-        return np.column_stack((A_67_left[:3, 3], A_67_right[:3, 3]))
+    return np.column_stack((A_67_left[:3, 3], A_67_right[:3, 3]))
 
 
 def plot_arms(wtheta, atheta_left, atheta_right, rad=True):

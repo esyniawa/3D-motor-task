@@ -45,7 +45,7 @@ def bads_inverse_kinematic(starting_angles, rad = True):
 
 
 if __name__ == '__main__':
+    with suppress_stdout():
+        res = bads_inverse_kinematic(starting_angles=params['starting_angles'])
 
-    res = bads_inverse_kinematic(np.radians([-25, 20, 30, 12, 30]))
-
-    print(res)
+    print(np.degrees(res))
