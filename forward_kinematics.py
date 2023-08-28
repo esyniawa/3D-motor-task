@@ -49,6 +49,7 @@ def check_theta_limits_head(wtheta, htheta, rad=True):
 def forward_kinematics_arm(wtheta,
                            atheta,
                            arm = 'right',
+                           forearm_length = 137.3,
                            radians = True,
                            return_joint_coordinates = False):
 
@@ -82,7 +83,7 @@ def forward_kinematics_arm(wtheta,
     # elbow
     A_6 = DH_matrix(a=const * -15, d=0, alpha=np.pi/2, theta=atheta[3])
     #forearm
-    A_7 = DH_matrix(a=0, d=const * 137.3, alpha=np.pi/2, theta=atheta[4] - np.pi/2)
+    A_7 = DH_matrix(a=0, d=const * forearm_length, alpha=np.pi/2, theta=atheta[4] - np.pi/2)
 
     A_23 = A_12 @ A_3
     A_34 = A_23 @ A_4
@@ -140,6 +141,83 @@ def forward_kinematics_head(wtheta,
     return np.column_stack((A_67_left[:3, 3], A_67_right[:3, 3]))
 
 
+def forearm_coordinates(wtheta,
+                        atheta,
+                        arm = 'right',
+                        radians = True):
+
+    if not radians:
+        wtheta = np.radians(wtheta)
+        atheta = np.radians(atheta)
+
+    elbow_koord = forward_kinematics_arm(wtheta, atheta, arm, forearm_length=0, return_joint_coordinates=False)
+    hand_koord = forward_kinematics_arm(wtheta, atheta, arm, return_joint_coordinates=False)
+
+    return elbow_koord, hand_koord
+
+
+def touch_forearm(wtheta,
+                  starting_joint_angles,
+                  resting_joint_angles,
+                  percentile, # must be between 0 (elbow) and 1 (hand)
+                  resting_arm='right',
+                  radians=True,
+                  do_plot=False):
+
+    if resting_arm == 'right':
+        moving_arm = 'left'
+    elif resting_arm == 'left':
+        moving_arm = 'right'
+    else:
+        raise ValueError
+
+    from bads_inverse_kinematics import bads_inverse_kinematic, suppress_stdout
+
+    # get vector of forearm position
+    start, end = forearm_coordinates(wtheta, resting_joint_angles, resting_arm, radians)
+    forearm_vector = end - start
+    touching_point = start + percentile*forearm_vector
+
+    # calculate arm joint to touch the forearm of the other arm
+    with suppress_stdout():
+        atheta_new = bads_inverse_kinematic(end_attractor=touching_point,
+                                            starting_joint_angles=starting_joint_angles,
+                                            waist_angles=wtheta,
+                                            moving_arm=moving_arm)
+    if not do_plot:
+        return atheta_new
+    else:
+        import matplotlib.pyplot as plt
+
+        pos_resting_arm = forward_kinematics_arm(wtheta=wtheta,
+                                                 atheta=resting_joint_angles,
+                                                 arm=resting_arm,
+                                                 return_joint_coordinates=True)
+        new_pos_moving_arm = forward_kinematics_arm(wtheta=wtheta,
+                                                    atheta=atheta_new,
+                                                    arm=moving_arm,
+                                                    return_joint_coordinates=True)
+        starting_pos_moving_arm = forward_kinematics_arm(wtheta=wtheta,
+                                                         atheta=starting_joint_angles,
+                                                         arm=moving_arm,
+                                                         return_joint_coordinates=True)
+
+        # plotting
+        ax = plt.figure().add_subplot(projection='3d')
+        # arm positions
+        ax.plot(pos_resting_arm[0, :], pos_resting_arm[1, :], pos_resting_arm[2, :], 'g')
+        ax.plot(new_pos_moving_arm[0, :], new_pos_moving_arm[1, :], new_pos_moving_arm[2, :], 'b')
+        ax.plot(starting_pos_moving_arm[0, :], starting_pos_moving_arm[1, :], starting_pos_moving_arm[2, :], 'b--')
+        # touching point
+        ax.scatter(touching_point[0], touching_point[1], touching_point[2])
+        # labels
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+
+        plt.show()
+
+
 def plot_arms(wtheta, atheta_left, atheta_right, rad=True):
     if not rad:
         wtheta = np.radians(wtheta)
@@ -192,11 +270,19 @@ def plot_upper_body(wtheta, atheta_left, atheta_right, htheta, rad=True):
 
 
 if __name__ == '__main__':
-    print(forward_kinematics_arm(wtheta=[0, 0, 0], atheta=np.radians([-25, 20, 30, 12, 30])))
+    do_plot_upper_body = False
+    do_plot_touch_forearm = True
 
-    plot_upper_body(wtheta=[0, 0, 0],
-                    atheta_left=np.radians([-25, 20, 30, 12, 30]),
-                    atheta_right=np.radians([5, 20, 0, 90, 20]),
-                    htheta=np.radians([0, 0, 20, 0, 0]))
+    if do_plot_upper_body:
+        plot_upper_body(wtheta=[0, 0, 0],
+                        atheta_left=np.radians([-25, 20, 30, 12, 30]),
+                        atheta_right=np.radians([-45, 0, 90, 90, -20]),
+                        htheta=np.radians([0, 0, 20, 0, 0]))
 
-
+    if do_plot_touch_forearm:
+        touch_forearm(wtheta=params['waist_position'],
+                      starting_joint_angles=np.radians([-25, 20, 30, 12, 30]),
+                      resting_joint_angles=np.radians([-45, 0, 90, 90, -20]),
+                      resting_arm='right',
+                      percentile=0.75,
+                      do_plot=True)

@@ -18,23 +18,30 @@ def suppress_stdout():
         finally:
             sys.stdout = old_stdout
 
-def error_function_kinematic(atheta,
-                             end_point = params['end_point'],
-                             wtheta = params['waist_position'],
-                             arm='right'):
 
-    error = end_point - forward_kinematics_arm(wtheta, atheta, arm)
-    return np.linalg.norm(error)
-
-
-def bads_inverse_kinematic(starting_angles, rad = True):
+def bads_inverse_kinematic(end_attractor,
+                           starting_joint_angles,
+                           waist_angles,
+                           moving_arm='right',
+                           rad = True):
     if not rad:
-        starting_angles = np.radians(starting_angles)
+        starting_joint_angles = np.radians(starting_joint_angles)
+        waist_angles = np.radians(waist_angles)
+    # Error function for optimization
+    def error_function_kinematic(atheta,
+                                 end_point=end_attractor,
+                                 wtheta=waist_angles,
+                                 arm=moving_arm):
+
+        # distance between current and end position
+        error = np.linalg.norm(end_point - forward_kinematics_arm(wtheta, atheta, arm))
+        # minimal movement -> minimal change in joint angles
+        error += np.linalg.norm(starting_joint_angles-atheta)
+        return error
 
     target = error_function_kinematic
 
-    print(starting_angles)
-    bads = BADS(target, starting_angles,
+    bads = BADS(target, starting_joint_angles,
                 plausible_lower_bounds=params['lower_arm_joint_limits'],
                 plausible_upper_bounds=params['upper_arm_joint_limits'])
 
@@ -46,7 +53,9 @@ def bads_inverse_kinematic(starting_angles, rad = True):
 
 if __name__ == '__main__':
     with suppress_stdout():
-        res = bads_inverse_kinematic(starting_angles=params['starting_angles'])
+        res = bads_inverse_kinematic(starting_joint_angles=params['starting_angles'],
+                                     end_attractor=params['end_point'],
+                                     waist_angles=params['waist_position'])
 
     print(np.degrees(res))
     print(forward_kinematics_arm(params['waist_position'], res))
