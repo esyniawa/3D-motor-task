@@ -270,19 +270,20 @@ def plot_upper_body(wtheta, atheta_left, atheta_right, htheta, rad=True):
 
 
 if __name__ == '__main__':
+
     do_plot_upper_body = False
     do_plot_touch_forearm = True
 
     if do_plot_upper_body:
-        plot_upper_body(wtheta=[0, 0, 0],
+        plot_upper_body(wtheta=np.radians([0, 0, 0]),
                         atheta_left=np.radians([-25, 20, 30, 12, 30]),
                         atheta_right=np.radians([-45, 0, 90, 90, -20]),
                         htheta=np.radians([0, 0, 20, 0, 0]))
 
     if do_plot_touch_forearm:
         touch_forearm(wtheta=params['waist_position'],
-                      starting_joint_angles=np.radians([-25, 20, 30, 12, 30]),
+                      starting_joint_angles=np.radians([-20, 0, 30, 0, 30]),
                       resting_joint_angles=np.radians([-45, 0, 90, 90, -20]),
                       resting_arm='right',
-                      percentile=0.75,
+                      percentile=0.33,
                       do_plot=True)
