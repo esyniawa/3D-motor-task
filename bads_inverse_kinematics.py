@@ -32,14 +32,18 @@ def bads_inverse_kinematic(end_attractor,
                                  end_point=end_attractor,
                                  wtheta=waist_angles,
                                  arm=moving_arm,
-                                 minimal_movement=False):
+                                 center_joints_goal=True,
+                                 min_distance_joint_coord=True):
 
         # distance between current and end position
-        error = np.linalg.norm(end_point - forward_kinematics_arm(wtheta, atheta, arm))
+        error = np.linalg.norm(end_point - forward_kinematics_arm(wtheta, atheta, arm)) ** 2
         # minimal movement -> minimal change in joint angles
         # TODO: minimal movement could also mean that the elbow and shoulder coordinate shouldn't change
-        if minimal_movement:
-            error += np.linalg.norm(starting_joint_angles-atheta)
+        if center_joints_goal:
+            error += np.linalg.norm(atheta - (params['lower_arm_joint_limits'] + params['upper_arm_joint_limits'])/2)
+        if min_distance_joint_coord:
+            error += np.linalg.norm(forward_kinematics_arm(wtheta, starting_joint_angles, arm, return_joint_coordinates=True) -
+                                    forward_kinematics_arm(wtheta, atheta, arm, return_joint_coordinates=True))
         return error
 
     target = error_function_kinematic

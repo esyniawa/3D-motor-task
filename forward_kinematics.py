@@ -285,5 +285,5 @@ if __name__ == '__main__':
                       starting_joint_angles=np.radians([-20, 0, 30, 0, 30]),
                       resting_joint_angles=np.radians([-45, 0, 90, 90, -20]),
                       resting_arm='right',
-                      percentile=0.33,
+                      percentile=0.2,
                       do_plot=True)
