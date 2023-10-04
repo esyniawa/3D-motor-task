@@ -1,3 +1,5 @@
+import os.path
+
 import numpy as np
 
 from parameters import params
@@ -241,7 +243,14 @@ def plot_arms(wtheta, atheta_left, atheta_right, rad=True):
     plt.show()
 
 
-def plot_upper_body(wtheta, atheta_left, atheta_right, htheta, rad=True):
+def plot_upper_body(wtheta,
+                    atheta_left,
+                    atheta_right,
+                    htheta,
+                    save_plot,
+                    save_name,
+                    rad=True,
+                    show_plot=False):
     if not rad:
         wtheta = np.radians(wtheta)
         atheta_left = np.radians(atheta_left)
@@ -256,34 +265,122 @@ def plot_upper_body(wtheta, atheta_left, atheta_right, htheta, rad=True):
 
     ax = plt.figure().add_subplot(projection='3d')
     # arm positions
-    ax.plot(pos_left_arm[0,:],pos_left_arm[1,:], pos_left_arm[2,:])
     ax.plot(pos_right_arm[0,:],pos_right_arm[1,:], pos_right_arm[2,:])
+    ax.plot(pos_left_arm[0,:],pos_left_arm[1,:], pos_left_arm[2,:])
     # eye positions
     ax.scatter(pos_eyes[0, 0], pos_eyes[1, 0], pos_eyes[2, 0])
     ax.scatter(pos_eyes[0, 1], pos_eyes[1, 1], pos_eyes[2, 1])
 
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
+    ax.set_xlim3d([-50, 400])
+    ax.set_xlabel('Z')
+    #ax.set_xticks([])
 
-    plt.show()
+    ax.set_ylim3d([-50, 200])
+    ax.set_ylabel('Y')
+    ax.set_yticks([0, 100, 200])
+
+    ax.set_zlim3d([-200, 200])
+    ax.set_zlabel('X')
+    ax.set_zticks(np.linspace(-200, 200, 5))
+
+    # viewpoint
+    ax.view_init(-172, -98, 90)
+
+    if save_plot:
+        dirname, basename = os.path.split(save_name)
+        if dirname and not os.path.exists(dirname):
+            os.makedirs(dirname)
+
+        plt.savefig(save_name)
+
+    if show_plot:
+        plt.show()
+
+    plt.close()
+
+
+def animate_touch_forearm(wtheta,
+                          starting_joint_angles,
+                          resting_joint_angles,
+                          head_angles,
+                          percentile,  # must be between 0 (elbow) and 1 (hand)
+                          iterations,
+                          resting_arm='right',
+                          radians=True,
+                          remove_junk=True):
+
+    from functions import sin_space, normal_space
+
+    new_joint_angles = touch_forearm(wtheta,
+                                     starting_joint_angles,
+                                     resting_joint_angles,
+                                     percentile,
+                                     resting_arm,
+                                     radians,
+                                     do_plot=False)
+
+    # calculate change in kinematics
+    movement_angles = []
+
+    for i in range(len(starting_joint_angles)):
+        movement_angles.append(normal_space(start=starting_joint_angles[i], stop=new_joint_angles[i], num=iterations))
+
+    movement_angles = np.array(movement_angles)
+
+    # Save trajectory in single .pdfs
+    save_folder = 'figures/movement_trajectory/'
+    for i in range(iterations):
+        if resting_arm == 'right':
+            right_theta = resting_joint_angles
+            left_theta = movement_angles[:, i]
+        else:
+            right_theta = movement_angles[:, i]
+            left_theta = resting_joint_angles
+
+        plot_upper_body(wtheta=wtheta,
+                        atheta_left=right_theta,
+                        atheta_right=left_theta,
+                        htheta=head_angles,
+                        save_plot=True,
+                        save_name=save_folder + f'figure[{i}].png',
+                        rad=radians,
+                        show_plot=False)
+
+    # Use pillow to save all frames as an animation in a gif file
+    from PIL import Image
+
+    images = [Image.open(save_folder + f'figure[{n}].png') for n in range(iterations)]
+
+    images[0].save('movement.gif', save_all=True, append_images=images[1:], duration=10, loop=0)
 
 
 if __name__ == '__main__':
 
     do_plot_upper_body = False
     do_plot_touch_forearm = True
+    do_animate_touch_forearm = False
 
     if do_plot_upper_body:
         plot_upper_body(wtheta=np.radians([0, 0, 0]),
                         atheta_left=np.radians([-25, 20, 30, 12, 30]),
                         atheta_right=np.radians([-45, 0, 90, 90, -20]),
-                        htheta=np.radians([0, 0, 20, 0, 0]))
+                        htheta=np.radians([0, 0, 20, 0, 0]),
+                        save_plot=True,
+                        save_name='new_figure', show_plot=True)
 
     if do_plot_touch_forearm:
         touch_forearm(wtheta=params['waist_position'],
                       starting_joint_angles=np.radians([-20, 0, 30, 0, 30]),
                       resting_joint_angles=np.radians([-45, 0, 90, 90, -20]),
                       resting_arm='right',
-                      percentile=0.2,
+                      percentile=0.5,
                       do_plot=True)
+
+    if do_animate_touch_forearm:
+        animate_touch_forearm(wtheta=params['waist_position'],
+                              starting_joint_angles=np.radians([-20, 0, 30, 0, 30]),
+                              resting_joint_angles=np.radians([-45, 0, 90, 90, -20]),
+                              head_angles=np.radians([0, 0, 20, 0, 0]),
+                              iterations=300,
+                              resting_arm='right',
+                              percentile=0.5)

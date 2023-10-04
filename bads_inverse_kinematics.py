@@ -42,8 +42,8 @@ def bads_inverse_kinematic(end_attractor,
         if center_joints_goal:
             error += np.linalg.norm(atheta - (params['lower_arm_joint_limits'] + params['upper_arm_joint_limits'])/2)
         if min_distance_joint_coord:
-            error += np.linalg.norm(forward_kinematics_arm(wtheta, starting_joint_angles, arm, return_joint_coordinates=True) -
-                                    forward_kinematics_arm(wtheta, atheta, arm, return_joint_coordinates=True))
+            error += np.linalg.norm(forward_kinematics_arm(wtheta, starting_joint_angles, arm, return_joint_coordinates=True)[:-1] -
+                                    forward_kinematics_arm(wtheta, atheta, arm, return_joint_coordinates=True)[:-1])
         return error
 
     target = error_function_kinematic

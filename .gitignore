@@ -1,5 +1,11 @@
 .idea/
 *scratch*
+figures/
+
+*.png
+*.pdf
+*.jpg
+*.gif
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
