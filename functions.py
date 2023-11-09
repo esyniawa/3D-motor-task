@@ -7,23 +7,16 @@ def normal_space(start, stop, num):
         res = 1/(1+np.exp(-values+5))
         return res
 
-    if start < 0:
-        offset = abs(start) + stop
-    else:
-        offset = start
-
     x = sigmoid(num)
     # uniform linspace
+    offset = abs(start - stop)
     y = np.linspace(0, offset, num-1)
 
     return np.append(x * y + start, stop)
 
 
 def sin_space(start, stop, num):
-    if start < 0:
-        offset = abs(start) + stop
-    else:
-        offset = start
+    offset = abs(start - stop)
 
     x = np.sin(np.linspace(0, np.pi/2, num, endpoint=True))
 
